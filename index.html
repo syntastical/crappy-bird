@@ -18,8 +18,8 @@
         speed: 2
       },
       view: {
-        width: 1000,
-        height: 800,
+        width: window.innerWidth,
+        height: window.innerHeight,
       },
       player: {
         width: 60,
@@ -56,7 +56,15 @@
         start();
       }
     });
-    body.addEventListener('tou', (e) => {});
+    body.addEventListener('touchstart', (e) => {
+      if(gameState.gameOver) {
+        clearScreen();
+        gameState = JSON.parse(JSON.stringify(initialGameState));
+        start();
+      } else {
+        gameState.player.acceleration = 10;
+      }
+    });
 
     function gameOver() {
       ctx.save();
