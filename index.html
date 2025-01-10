@@ -27,7 +27,7 @@
         acceleration: 0.5,
         maxAcceleration: 18,
         y: 270,
-        x: 300
+        x: window.innerWidth / 2
       }
     }
     let gameState = JSON.parse(JSON.stringify(initialGameState));
@@ -71,9 +71,13 @@
       gameState.gameOver = true;
       ctx.fillStyle = 'black';
       ctx.font = '30px Arial';
-      ctx.fillText('Game Over', 400, 300);
-      ctx.fillText('Press C to restart', 400, 350);
+      centerText(ctx, 'Game Over', 300);
+      centerText(ctx, 'Press C to restart', 350);
       ctx.restore();
+    }
+    function centerText(ctx, text, y) {
+      const textWidth = ctx.measureText(text).width;
+      ctx.fillText(text, (gameState.view.width - textWidth) / 2, y);
     }
     function clearScreen() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
