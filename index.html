@@ -1,0 +1,116 @@
+<html lang="en">
+<head>
+  <title>Crappy Bird</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    const initialGameState = {
+      score: 0,
+      gameOver: false,
+      counter: 110,
+      pipes: [],
+      pipe: {
+        width: 60,
+        gap: 200,
+        segments: 5,
+        speed: 2
+      },
+      view: {
+        width: 1000,
+        height: 800,
+      },
+      player: {
+        width: 60,
+        height: 60,
+        acceleration: 0.5,
+        maxAcceleration: 18,
+        y: 270,
+        x: 300
+      }
+    }
+    let gameState = JSON.parse(JSON.stringify(initialGameState));
+
+    const canvas = document.getElementById('canvas');
+    canvas.width = gameState.view.width;
+    canvas.height = gameState.view.height;
+    const ctx = canvas.getContext('2d');
+
+    function drawPipe(ctx, x, split) {
+      ctx.save();
+      ctx.fillStyle = 'green';
+      const segmentSize = (gameState.view.height - gameState.pipe.gap) / gameState.pipe.segments;
+      ctx.fillRect(x, 0, gameState.pipe.width, segmentSize * split);
+      ctx.fillRect(x, gameState.view.height - ((gameState.pipe.segments - split) * segmentSize), gameState.pipe.width, (gameState.pipe.segments - split) * segmentSize);
+      ctx.restore();
+    }
+
+    const body = document.querySelector('body');
+    body.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        gameState.player.acceleration = 10;
+      } else if(e.code === 'KeyC' && gameState.gameOver) {
+        clearScreen();
+        gameState = JSON.parse(JSON.stringify(initialGameState));
+        start();
+      }
+    });
+    body.addEventListener('tou', (e) => {});
+
+    function gameOver() {
+      ctx.save();
+      gameState.gameOver = true;
+      ctx.fillStyle = 'black';
+      ctx.font = '30px Arial';
+      ctx.fillText('Game Over', 400, 300);
+      ctx.fillText('Press C to restart', 400, 350);
+      ctx.restore();
+    }
+    function clearScreen() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function start() {
+      ctx.fillStyle = 'red';
+      const timer = setInterval(() => {
+        gameState.player.y -= gameState.player.acceleration;
+        if(Math.abs(gameState.player.acceleration) < gameState.player.maxAcceleration) {
+          gameState.player.acceleration -= 0.5;
+        }
+        gameState.counter += 1;
+        if(gameState.counter % 120 === 0) {
+          gameState.counter += 0;
+          const split = Math.floor(Math.random() * (gameState.pipe.segments - 1)) + 1;
+          gameState.pipes.push({x: gameState.view.width, split});
+        }
+        clearScreen();
+        [...gameState.pipes].forEach((pipe, index) => {
+          pipe.x -= gameState.pipe.speed;
+          drawPipe(ctx, pipe.x, pipe.split);
+          if(pipe.x < -gameState.pipe.width) {
+            gameState.pipes.splice(index, 1);
+          }
+        });
+        ctx.fillRect(gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
+        if(gameState.player.y > gameState.view.height - gameState.player.height || gameState.player.y < 0) {
+          clearInterval(timer)
+          gameOver();
+        }
+        for(let i = 0; i < gameState.pipes.length; i++) {
+          const pipe = gameState.pipes[i];
+          if(gameState.player.x + gameState.player.width > pipe.x && gameState.player.x < pipe.x + gameState.pipe.width) {
+            if(gameState.player.y < (gameState.view.height - gameState.pipe.gap) / gameState.pipe.segments * pipe.split || gameState.player.y + gameState.player.height > gameState.view.height - ((gameState.pipe.segments - pipe.split) * (gameState.view.height - gameState.pipe.gap) / gameState.pipe.segments)) {
+              clearInterval(timer);
+              gameOver();
+            }
+          }
+        }
+      }, 15);
+    }
+
+    start();
+  </script>
+</body>
+
+</html>
