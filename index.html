@@ -10,6 +10,10 @@
       score: 0,
       gameOver: false,
       counter: 110,
+      bird: {
+        frame: 0,
+        flap: 0
+      },
       pipes: [],
       pipe: {
         width: 60,
@@ -22,14 +26,25 @@
         height: window.innerHeight,
       },
       player: {
-        width: 60,
-        height: 60,
+        width: 80,
+        height: 80,
         acceleration: 0.5,
         maxAcceleration: 18,
         y: 270,
         x: window.innerWidth / 2
       }
     }
+    const bird = [
+      new Image(initialGameState.player.width, initialGameState.player.height),
+      new Image(initialGameState.player.width, initialGameState.player.height),
+      new Image(initialGameState.player.width, initialGameState.player.height),
+    ]
+    // image.onload = drawImageActualSize;
+
+    bird[0].src = `images/bird/1.gif`;
+    bird[1].src = `images/bird/2.gif`;
+    bird[2].src = `images/bird/3.gif`;
+
     let gameState = JSON.parse(JSON.stringify(initialGameState));
 
     const canvas = document.getElementById('canvas');
@@ -50,10 +65,13 @@
     body.addEventListener('keydown', (e) => {
       if (e.code === 'Space') {
         gameState.player.acceleration = 10;
+        gameState.bird.frame = 2;
       } else if(e.code === 'KeyC' && gameState.gameOver) {
         clearScreen();
         gameState = JSON.parse(JSON.stringify(initialGameState));
         start();
+      } else if(e.code === 'KeyA') {
+        ctx.scale
       }
     });
     body.addEventListener('touchstart', (e) => {
@@ -85,6 +103,8 @@
 
     function start() {
       ctx.fillStyle = 'red';
+      let scale = 1;
+
       const timer = setInterval(() => {
         gameState.player.y -= gameState.player.acceleration;
         if(Math.abs(gameState.player.acceleration) < gameState.player.maxAcceleration) {
@@ -96,7 +116,17 @@
           const split = Math.floor(Math.random() * (gameState.pipe.segments - 1)) + 1;
           gameState.pipes.push({x: gameState.view.width, split});
         }
+        if(gameState.bird.frame === 2) {
+          gameState.bird.flap++;
+          if(gameState.bird.flap > 15) {
+            gameState.bird.frame = 0;
+            gameState.bird.flap = 0;
+          }
+        }
+        // scale -= 0.0015;
         clearScreen();
+        ctx.save();
+        ctx.scale(scale, scale);
         [...gameState.pipes].forEach((pipe, index) => {
           pipe.x -= gameState.pipe.speed;
           drawPipe(ctx, pipe.x, pipe.split);
@@ -104,7 +134,8 @@
             gameState.pipes.splice(index, 1);
           }
         });
-        ctx.fillRect(gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
+        ctx.drawImage(bird[gameState.bird.frame], gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
+        //ctx.fillRect(gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
         if(gameState.player.y > gameState.view.height - gameState.player.height || gameState.player.y < 0) {
           clearInterval(timer)
           gameOver();
@@ -118,7 +149,9 @@
             }
           }
         }
+        ctx.restore();
       }, 15);
+
     }
 
     start();
