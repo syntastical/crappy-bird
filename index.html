@@ -10,11 +10,8 @@
       score: 0,
       gameOver: false,
       counter: 110,
-      bird: {
-        frame: 0,
-        flap: 0
-      },
       pipes: [],
+      touchMode: 'ontouchstart' in window,
       pipe: {
         width: 60,
         gap: 200,
@@ -31,7 +28,9 @@
         acceleration: 0.5,
         maxAcceleration: 18,
         y: 270,
-        x: window.innerWidth / 2
+        x: window.innerWidth / 2,
+        frame: 0,
+        flap: 0
       }
     }
     const bird = [
@@ -60,37 +59,50 @@
       ctx.fillRect(x, gameState.view.height - ((gameState.pipe.segments - split) * segmentSize), gameState.pipe.width, (gameState.pipe.segments - split) * segmentSize);
       ctx.restore();
     }
+    function restart() {
+      clearScreen();
+      gameState = JSON.parse(JSON.stringify(initialGameState));
+      start();
+    }
+    function flap() {
+      gameState.player.acceleration = 10;
+      gameState.player.frame = 2;
+    }
 
     const body = document.querySelector('body');
     body.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') {
-        gameState.player.acceleration = 10;
-        gameState.bird.frame = 2;
-      } else if(e.code === 'KeyC' && gameState.gameOver) {
-        clearScreen();
-        gameState = JSON.parse(JSON.stringify(initialGameState));
-        start();
-      } else if(e.code === 'KeyA') {
-        ctx.scale
+      e.preventDefault();
+      if (e.code === 'KeyC' && gameState.gameOver) {
+        restart();
+      } else if (e.code === 'Space') {
+        flap();
       }
     });
     body.addEventListener('touchstart', (e) => {
+      e.preventDefault();
       if(gameState.gameOver) {
-        clearScreen();
-        gameState = JSON.parse(JSON.stringify(initialGameState));
-        start();
+        restart();
       } else {
-        gameState.player.acceleration = 10;
+        flap();
       }
     });
 
+    function startGame() {
+      ctx.save();
+      gameState.gameOver = true;
+      ctx.fillStyle = 'black';
+      ctx.font = '30px Arial';
+      centerText(ctx, 'Crappy Bird', 300);
+      centerText(ctx, `${gameState.touchMode ? 'Tap' : 'Press C'} to start`, 350);
+      ctx.restore();
+    }
     function gameOver() {
       ctx.save();
       gameState.gameOver = true;
       ctx.fillStyle = 'black';
       ctx.font = '30px Arial';
       centerText(ctx, 'Game Over', 300);
-      centerText(ctx, 'Press C to restart', 350);
+      centerText(ctx, `${gameState.touchMode ? 'Tap' : 'Press C'} to restart`, 350);
       ctx.restore();
     }
     function centerText(ctx, text, y) {
@@ -116,11 +128,11 @@
           const split = Math.floor(Math.random() * (gameState.pipe.segments - 1)) + 1;
           gameState.pipes.push({x: gameState.view.width, split});
         }
-        if(gameState.bird.frame === 2) {
-          gameState.bird.flap++;
-          if(gameState.bird.flap > 15) {
-            gameState.bird.frame = 0;
-            gameState.bird.flap = 0;
+        if(gameState.player.frame === 2) {
+          gameState.player.flap++;
+          if(gameState.player.flap > 15) {
+            gameState.player.frame = 0;
+            gameState.player.flap = 0;
           }
         }
         // scale -= 0.0015;
@@ -134,7 +146,7 @@
             gameState.pipes.splice(index, 1);
           }
         });
-        ctx.drawImage(bird[gameState.bird.frame], gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
+        ctx.drawImage(bird[gameState.player.frame], gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
         //ctx.fillRect(gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
         if(gameState.player.y > gameState.view.height - gameState.player.height || gameState.player.y < 0) {
           clearInterval(timer)
@@ -151,10 +163,9 @@
         }
         ctx.restore();
       }, 15);
-
     }
 
-    start();
+    startGame();
   </script>
 </body>
 
